@@ -225,3 +225,13 @@ export const setupLottieLoader = () => {
     }
   });
 };
+
+export const changeView = (view) => {
+  const lastView = document.querySelector(".active");
+  lastView.style.display = "none";
+  lastView.classList.remove("active");
+  const newView = document.querySelector(`#${view}`);
+  newView.style.display = "block";
+  newView.classList.add("active");
+  store.dispatch({ type: "VIEW_CHANGE", view });
+};

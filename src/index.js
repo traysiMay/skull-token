@@ -18,10 +18,51 @@ import {
   changeButton,
   setupLottieLoader,
   swatchText,
+  changeView,
 } from "./actions";
-import skullView from "./SKULL.svg";
+import skullSVG from "./SKULL.svg";
 import "./styles.scss";
+import "./nav.scss";
 const PP = "D386E3DAC68BCD13D229A89EEF9FC4EE2610AB7C708D0C9BA91998752FA9462C";
+
+const viewContainer = document.createElement("div");
+viewContainer.id = "view-container";
+viewContainer.style.maxWidth = "400px";
+viewContainer.style.margin = "auto";
+document.body.appendChild(viewContainer);
+
+const skullView = document.createElement("div");
+skullView.classList.add("active");
+skullView.id = "skull";
+skullView.innerHTML = skullSVG;
+viewContainer.appendChild(skullView);
+
+const tricorderView = document.createElement("div");
+tricorderView.innerText = "TRICORDER";
+tricorderView.id = "tricorder";
+tricorderView.style.display = "none";
+viewContainer.appendChild(tricorderView);
+
+const nav = document.createElement("div");
+nav.id = "nav";
+const tricorder = document.createElement("div");
+tricorder.className = "button";
+tricorder.innerText = "Tricorder";
+const skullNav = document.createElement("div");
+skullNav.className = "button";
+skullNav.innerText = "Skull";
+nav.appendChild(tricorder);
+nav.appendChild(skullNav);
+document.body.prepend(nav);
+
+store.subscribe((d) => {
+  console.log(d);
+});
+
+skullNav.onclick = () => changeView("skull");
+tricorder.onclick = () => {
+  changeView("tricorder");
+};
 
 async function setupWeb3() {
   return new Promise((resolve) => {
@@ -53,11 +94,6 @@ async function setupWeb3() {
 
 function setupSkull() {
   if (store.getState().connectionStatus !== "failure") {
-    const viewContainer = document.createElement("div");
-    viewContainer.innerHTML = skullView;
-    viewContainer.style.maxWidth = "400px";
-    viewContainer.style.margin = "auto";
-    document.body.appendChild(viewContainer);
     const svg = viewContainer.querySelector("svg");
     svg.style.height = window.innerHeight;
     svg.style.margin = "auto";

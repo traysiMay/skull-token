@@ -20,6 +20,7 @@ const initialState = {
   swatchButton: { cy: 0, r: 0 },
   swatchTarget: { cy: 0, r: 0 },
   cancelTextAnimation: () => {},
+  activeScreen: "skull",
 };
 
 const reducer = (state = initialState, action) => {
