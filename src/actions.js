@@ -1,6 +1,7 @@
 import lottie from "lottie-web";
 import animationData from "./dot.json";
 import store from "./store";
+import { skullNav, tricorder } from ".";
 
 export const SETUP_WEB3 = "SETUP_WEB3";
 export const FAIL_WEB3 = "FAIL_WEB3";
@@ -226,6 +227,10 @@ export const setupLottieLoader = () => {
   });
 };
 
+const video = document.createElement("video");
+const canvas = document.createElement("canvas");
+let frame;
+let s;
 export const changeView = (view) => {
   const lastView = document.querySelector(".active");
   lastView.style.display = "none";
@@ -234,4 +239,84 @@ export const changeView = (view) => {
   newView.style.display = "block";
   newView.classList.add("active");
   store.dispatch({ type: "VIEW_CHANGE", view });
+  switch (store.getState().activeScreen) {
+    case "skull":
+      skullNav.style.display = "none";
+      tricorder.style.display = "block";
+      break;
+    case "tricorder":
+      skullNav.style.display = "block";
+      tricorder.style.display = "none";
+      break;
+  }
+
+  if (view === "skull") {
+    video.pause();
+    video.src = "";
+    canvas.style.display = "none";
+    s.getTracks().forEach(function (track) {
+      track.stop();
+    });
+    cancelAnimationFrame(frame);
+  }
+  if (view === "tricorder") {
+    video.style.display = "none";
+    video.setAttribute("playsinline", "");
+    video.play();
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.position = "absolute";
+    canvas.style.top = "0px";
+    canvas.style.left = "0px";
+    canvas.style.display = "block";
+    canvas.style.zIndex = -1;
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext("2d");
+    window.video = video;
+    video.addEventListener("play", () => {
+      function step() {
+        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var data = imageData.data;
+        for (var i = 0; i < data.length; i += 4) {
+          var r = data[i];
+          var g = data[i + 1];
+          var b = data[i + 2];
+          // if (r > 150 && g > 150 && b > 150) {
+          //   data[i] = 255;
+          //   data[i + 1] = 0;
+          //   data[i + 2] = 0;
+          // }
+          if (r < 100 && g < 100 && b < 100) {
+            const { r, g, b } = store.getState().color;
+            data[i] = 255;
+            data[i + 1] = 0;
+            data[i + 2] = b;
+          }
+        }
+        ctx.putImageData(imageData, 0, 0);
+        frame = requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+
+    navigator.mediaDevices
+      .getUserMedia({
+        video: { facingMode: { exact: "environment" } },
+        // video: true,
+        audio: false,
+      })
+      .then(function (stream) {
+        video.srcObject = stream;
+        s = stream;
+        video.play();
+        // video.onloadedmetadata = function (e) {
+        //   alert(`${video.videoHeight}, ${video.videoWidth}`);
+        // };
+      })
+      .catch(function (err) {
+        /* handle the error */
+      });
+  }
 };

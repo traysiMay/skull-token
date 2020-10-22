@@ -1,6 +1,10 @@
 body {
   margin: 0;
 }
+
+#nav {
+  z-index: 999;
+}
 .button-tainer {
   display: flex;
   justify-content: space-between;

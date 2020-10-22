@@ -35,6 +35,7 @@ module.exports = {
   plugins: [
     new webpack.ProgressPlugin(),
     new HtmlWebpackPlugin({
+      favicon: "./lil-skull.svg",
       title: "SKULL",
     }),
   ],
@@ -103,5 +104,6 @@ module.exports = {
 
   devServer: {
     open: true,
+    https: true,
   },
 };

@@ -21,15 +21,22 @@ import {
   changeView,
 } from "./actions";
 import skullSVG from "./SKULL.svg";
+import navSVG from "./NAV.svg";
 import "./styles.scss";
 import "./nav.scss";
 const PP = "D386E3DAC68BCD13D229A89EEF9FC4EE2610AB7C708D0C9BA91998752FA9462C";
+// const PP = "650fba0be254d4fe4881375daa88d46fab0612b0301a01891888f30c91e387d0";
 
 const viewContainer = document.createElement("div");
 viewContainer.id = "view-container";
 viewContainer.style.maxWidth = "400px";
 viewContainer.style.margin = "auto";
 document.body.appendChild(viewContainer);
+
+const navView = document.createElement("div");
+navView.innerHTML = navSVG;
+navView.id = "nav";
+document.body.prepend(navView);
 
 const skullView = document.createElement("div");
 skullView.classList.add("active");
@@ -38,26 +45,35 @@ skullView.innerHTML = skullSVG;
 viewContainer.appendChild(skullView);
 
 const tricorderView = document.createElement("div");
-tricorderView.innerText = "TRICORDER";
 tricorderView.id = "tricorder";
 tricorderView.style.display = "none";
 viewContainer.appendChild(tricorderView);
 
-const nav = document.createElement("div");
-nav.id = "nav";
-const tricorder = document.createElement("div");
-tricorder.className = "button";
-tricorder.innerText = "Tricorder";
-const skullNav = document.createElement("div");
-skullNav.className = "button";
-skullNav.innerText = "Skull";
-nav.appendChild(tricorder);
-nav.appendChild(skullNav);
-document.body.prepend(nav);
+// const nav = document.createElement("div");
+// nav.id = "nav";
+// const tricorder = document.createElement("div");
+// tricorder.className = "button";
+// tricorder.innerText = "Tricorder";
+// const skullNav = document.createElement("div");
+// skullNav.className = "button";
+// skullNav.innerText = "Skull";
+// nav.appendChild(tricorder);
+// nav.appendChild(skullNav);
+// document.body.prepend(nav);
 
 store.subscribe((d) => {
-  console.log(d);
+  console.log("change");
 });
+
+export const skullNav = document
+  .querySelector("#NAV_LAYER")
+  .querySelector("#NAV_SKULL");
+
+skullNav.style.display = "none";
+
+export const tricorder = document
+  .querySelector("#NAV_LAYER")
+  .querySelector("#NAV_VIEWER");
 
 skullNav.onclick = () => changeView("skull");
 tricorder.onclick = () => {
@@ -66,12 +82,13 @@ tricorder.onclick = () => {
 
 async function setupWeb3() {
   return new Promise((resolve) => {
-    const testNet = "1592695252117";
+    const testNet = "1595694335602";
     const ropsten = "3";
 
     const web3 = new Web3(
       "wss://ropsten.infura.io/ws/v3/e835057bad674697959be47dcac5028e"
     );
+    // const web3 = new Web3("ws://localhost:8545");
     const account = web3.eth.accounts.privateKeyToAccount(PP);
     const contract = new web3.eth.Contract(
       skullContract.abi,
@@ -122,13 +139,20 @@ async function changeColor() {
   const button = document.getElementById("CHANGE_BG");
   const c = button.style.fill.split("(")[1].split(")")[0].split(",");
   const data = contract.methods
-    .setColor(parseInt(c[0]), parseInt(c[1]), parseInt(c[2]))
+    .setColor(
+      parseInt(c[0]),
+      parseInt(c[1]),
+      parseInt(c[2]),
+      account.address,
+      // `{r:${c[0]},g:${c[1].trim()},b:${c[2].trim()}}`
+      "{r:54,g:232,b:58}"
+    )
     .encodeABI();
 
   const privateKey = new Buffer(PP, "hex");
   const nonce = await web3.eth.getTransactionCount(account.address);
-  const gasPrice = web3.utils.toWei("23", "gwei");
-  const gasLimit = web3.utils.toHex("100000");
+  const gasPrice = web3.utils.toWei("33", "gwei");
+  const gasLimit = web3.utils.toHex("1500000");
   const rawTx = {
     to: contract._address,
     nonce: web3.utils.toHex(nonce),
@@ -138,6 +162,8 @@ async function changeColor() {
     data,
   };
   const tx = new Tx(rawTx, { chain: "ropsten" });
+  // const tx = new Tx(rawTx);
+
   tx.sign(privateKey);
 
   const serializedTx = tx.serialize();
@@ -147,6 +173,11 @@ async function changeColor() {
     .on("receipt", (d) => {
       console.log(d);
       store.dispatch({ type: SET_SENDING, sending: false });
+    })
+    .catch((error) => {
+      if (error.message.includes("Color is used")) {
+        alert("This color is already in use!");
+      }
     });
 }
 
