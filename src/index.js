@@ -25,7 +25,6 @@ import navSVG from "./NAV.svg";
 import "./styles.scss";
 import "./nav.scss";
 const PP = "D386E3DAC68BCD13D229A89EEF9FC4EE2610AB7C708D0C9BA91998752FA9462C";
-// const PP = "650fba0be254d4fe4881375daa88d46fab0612b0301a01891888f30c91e387d0";
 
 const viewContainer = document.createElement("div");
 viewContainer.id = "view-container";
