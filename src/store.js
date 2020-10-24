@@ -46,6 +46,8 @@ const reducer = (state = initialState, action) => {
       return { ...state, swatchButton: action.swatchButton };
     case "TEXT_ANIMATION":
       return { ...state, cancelTextAnimation: action.cancelTextAnimation };
+    case "SENDING_ANIMATION":
+      return { ...state, sendingAnimation: action.sendingAnimation };
     case "VIEW_CHANGE":
       return { ...state, activeScreen: action.view };
     default:

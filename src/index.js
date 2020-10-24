@@ -19,13 +19,20 @@ import {
   setupLottieLoader,
   swatchText,
   changeView,
+  sendingText,
+  change,
+  swatchLayer,
+  skullSwatch,
+  changeAttribute,
+  openSwatchButton,
+  toggleCamera,
 } from "./actions";
 import skullSVG from "./SKULL.svg";
 import navSVG from "./NAV.svg";
 import "./styles.scss";
 import "./nav.scss";
 const PP = "D386E3DAC68BCD13D229A89EEF9FC4EE2610AB7C708D0C9BA91998752FA9462C";
-
+// const PP = "63eeb6795bd48960b217438014ec9ed445eaf55d249d4b0a6be27db4b7048c27";
 const viewContainer = document.createElement("div");
 viewContainer.id = "view-container";
 viewContainer.style.maxWidth = "400px";
@@ -59,9 +66,45 @@ viewContainer.appendChild(tricorderView);
 // nav.appendChild(tricorder);
 // nav.appendChild(skullNav);
 // document.body.prepend(nav);
+const unsub = store.subscribe(async () => {
+  if (store.getState().sending) {
+    if (store.getState().sendingAnimation) return;
+    store.dispatch({ type: "SENDING_ANIMATION", sendingAnimation: true });
+    const animateText = () => {
+      let counter = 0;
+      let frame;
+      const animate = () => {
+        counter += 0.1;
+        sendingText().style.transform = `scale(1) rotate(${counter * 5.5}deg)`;
+        const wave = (0.5 * Math.sin(counter) + 0.8) * 150;
+        openSwatchButton().setAttribute("r", wave);
+        frame = requestAnimationFrame(animate);
+      };
+      animate();
+      return () => cancelAnimationFrame(frame);
+    };
+    const cancelTextAnimation = animateText();
+    store.dispatch({ type: "TEXT_ANIMATION", cancelTextAnimation });
+    closeSwatch().style.visibility = "hidden";
+    changeButton().style.visibility = "hidden";
+    change(1, 0, "opacity", skullSwatch());
+    const c = changeBg().style.fill.split("(")[1].split(")")[0].split(",");
 
-store.subscribe((d) => {
-  console.log("change");
+    openSwatchButton().style.fill = `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+    openSwatchButton().style.visibility = "visible";
+    await change(0, 1, "opacity", openSwatchButton(), changeAttribute);
+    await change(1, 0, "opacity", swatchText());
+    sendingText().style.opacity = 0;
+    sendingText().style.visibility = "visible";
+    await change(0, 1, "opacity", sendingText());
+  } else if (store.getState().sendingAnimation) {
+    store.getState().cancelTextAnimation();
+    skullSwatch().style.opacity = 1;
+    store.dispatch({ type: "SENDING_ANIMATION", sendingAnimation: false });
+    await change(1, 0, "opacity", sendingText());
+    sendingText().style.visibility = "hidden";
+    closeTheSwatch();
+  }
 });
 
 export const skullNav = document
@@ -79,15 +122,18 @@ tricorder.onclick = () => {
   changeView("tricorder");
 };
 
+export const cameraSwitchButton = document.querySelector("#CAMERA_SWITCH");
+cameraSwitchButton.style.display = "none";
+
 async function setupWeb3() {
   return new Promise((resolve) => {
-    const testNet = "1595694335602";
-    const ropsten = "3";
+    // const testNet = "1603398436561";
+    // const web3 = new Web3("ws://localhost:8545");
 
+    const ropsten = "3";
     const web3 = new Web3(
       "wss://ropsten.infura.io/ws/v3/e835057bad674697959be47dcac5028e"
     );
-    // const web3 = new Web3("ws://localhost:8545");
     const account = web3.eth.accounts.privateKeyToAccount(PP);
     const contract = new web3.eth.Contract(
       skullContract.abi,
@@ -116,16 +162,20 @@ function setupSkull() {
     svg.style.display = "block";
 
     const { swatchCx, swatchCy } = setupSwatchButtons();
-    setupLottieLoader();
+    // setupLottieLoader();
     swatchText().style.transformOrigin = `${swatchCx}px ${swatchCy}px`;
     swatchText().style.transform = "scale(0)";
+
+    sendingText().style.visibility = "hidden";
+    sendingText().style.transformOrigin = `${swatchCx}px ${swatchCy}px`;
 
     openSwatch().onclick = openTheSwatch;
     closeSwatch().onclick = closeTheSwatch;
 
+    cameraSwitchButton.onclick = toggleCamera;
+
     changeButton().onclick = () => {
       changeColor();
-      closeTheSwatch();
     };
   } else {
     alert("failed to connect");
@@ -143,14 +193,14 @@ async function changeColor() {
       parseInt(c[1]),
       parseInt(c[2]),
       account.address,
-      // `{r:${c[0]},g:${c[1].trim()},b:${c[2].trim()}}`
-      "{r:54,g:232,b:58}"
+      `{r:${c[0]},g:${c[1].trim()},b:${c[2].trim()}}`
+      // "{r:54,g:232,b:58}"
     )
     .encodeABI();
 
   const privateKey = new Buffer(PP, "hex");
   const nonce = await web3.eth.getTransactionCount(account.address);
-  const gasPrice = web3.utils.toWei("33", "gwei");
+  const gasPrice = web3.utils.toWei("44", "gwei");
   const gasLimit = web3.utils.toHex("1500000");
   const rawTx = {
     to: contract._address,
@@ -174,6 +224,7 @@ async function changeColor() {
       store.dispatch({ type: SET_SENDING, sending: false });
     })
     .catch((error) => {
+      console.log(error);
       if (error.message.includes("Color is used")) {
         alert("This color is already in use!");
       }
@@ -209,7 +260,6 @@ function setupButton() {
     }
     const x = Math.floor((ex - rect.left) * (canvas.width / rect.width));
     const y = Math.floor((ey - rect.top) * (canvas.width / rect.width));
-    console.log(x, y);
     const idx = (y * canvas.width + x) * 4;
     const color = `rgba(${data[idx]}, ${data[idx + 1]}, ${data[idx + 2]}, ${
       data[idx + 3]

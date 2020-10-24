@@ -1,9 +1,12 @@
 {
   "version": "1.0.0",
   "description": "My webpack project",
+  "homepage":"https://traysimay.github.io/skull-token",
   "scripts": {
     "build": "webpack",
-    "start": "webpack-dev-server --host=0.0.0.0"
+    "start": "webpack-dev-server --host=0.0.0.0",
+    "predeploy":"yarn build",
+    "deploy":"gh-pages -d dist"
   },
   "devDependencies": {
     "@babel/core": "^7.10.3",
@@ -30,6 +33,7 @@
   "dependencies": {
     "ethereumjs-tx": "^2.1.2",
     "fortmatic": "^2.0.6",
+    "gh-pages": "^3.1.0",
     "lottie-web": "^5.7.0",
     "redux": "^4.0.5",
     "web3": "^1.2.9"

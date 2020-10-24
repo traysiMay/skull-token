@@ -17,8 +17,6 @@ contract Skull is ERC721 {
         uint8 b;
     }
 
-    mapping(uint256 => Color) public claimedColors;
-
     event ColorChange(address indexed _changer, uint8 _r, uint8 _g, uint8 _b);
     event MessageChange(address indexed _changer, string _message);
 
@@ -39,19 +37,12 @@ contract Skull is ERC721 {
         address skullChanger,
         string memory tokenURI
     ) public {
-        for (uint256 i = 1; i < _tokenIds.current() + 1; i++) {
-            uint8 r = claimedColors[i].r;
-            uint8 g = claimedColors[i].g;
-            uint8 b = claimedColors[i].b;
-            require(_r != r && _g != g && _b != b, "Color is used");
-        }
         Color memory _color = Color(_r, _g, _b);
-        color = _color;
         _tokenIds.increment();
         uint256 newSkullId = _tokenIds.current();
         _mint(skullChanger, newSkullId);
         _setTokenURI(newSkullId, tokenURI);
-
+        color = _color;
         emit ColorChange(msg.sender, _r, _g, _b);
     }
 
