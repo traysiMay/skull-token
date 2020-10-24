@@ -226,8 +226,9 @@ async function changeColor() {
     .catch((error) => {
       console.log(error);
       if (error.message.includes("Color is used")) {
-        alert("This color is already in use!");
+        return alert("This color is already in use!");
       }
+      alert("oops! something went wrong -- refresh and try again");
     });
 }
 
